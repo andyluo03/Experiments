@@ -3,7 +3,7 @@
 #include <random>
 #include <functional>
 
-#include "fast_mm.hpp"
+#include "naive/naive_gemm.hpp"
 
 constexpr float kEpsilon = 0.0001f;
 

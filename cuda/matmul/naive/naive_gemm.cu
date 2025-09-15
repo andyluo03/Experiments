@@ -1,4 +1,4 @@
-#include "fast_mm.hpp"
+#include "naive_gemm.hpp"
 
 namespace {
 __global__
