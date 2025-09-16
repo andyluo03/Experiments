@@ -26,44 +26,70 @@ class Benchmark {
         for (int i = 0; i < N * K; i++) {
             B_[i] = dist(gen);
         }
+
+        cudaMalloc(&d_A_, sizeof(float) * M_ * N_);
+        cudaMalloc(&d_B_, sizeof(float) * N_ * K_);
+        cudaMalloc(&d_C_, sizeof(float) * M_ * K_);
+
+        cudaMemcpy(d_A_, A_, sizeof(float) * M_ * N_, cudaMemcpyHostToDevice);
+        cudaMemcpy(d_B_, B_, sizeof(float) * N_ * K_, cudaMemcpyHostToDevice);
     }
 
     void benchmarkDevice (const std::string& kernel_name, std::function<void(float*, float*, float*, int, int, int)> matmul) {
-      float *d_A, *d_B, *d_C;
+        auto start = std::chrono::high_resolution_clock::now();
+        matmul(d_A_, d_B_, d_C_, M_, N_, K_);
+        auto end = std::chrono::high_resolution_clock::now();
 
-      cudaMalloc(&d_A, sizeof(float) * M_ * N_);
-      cudaMalloc(&d_B, sizeof(float) * N_ * K_);
-      cudaMalloc(&d_C, sizeof(float) * M_ * K_);
+        uint64_t walltime_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        double realized_flops = (static_cast<double>(M_) * N_ * K_ * 2.0) / static_cast<double>(walltime_ns);
 
-      cudaMemcpy(d_A, A_, sizeof(float) * M_ * N_, cudaMemcpyHostToDevice);
-      cudaMemcpy(d_B, B_, sizeof(float) * N_ * K_, cudaMemcpyHostToDevice);
+        std::cout << "[" << name_ << " -- " << kernel_name << "]: GFLOPs: " << realized_flops << ", Runtime (ns): " << walltime_ns << std::endl;
+    }
 
-      auto start = std::chrono::high_resolution_clock::now();
-      matmul(d_A, d_B, d_C, M_, N_, K_);
-      auto end = std::chrono::high_resolution_clock::now();
+    void compareOracle(
+      const std::string& name, 
+      std::function<void(float*, float*, float*, int, int, int)> mm,
+      std::function<void(float*, float*, float*, int, int, int)> oracle
+    ) {
+      float* C_tmp = new float[M_ * K_];
 
-      cudaMemcpy(d_C, C_, sizeof(float) * M_ * K_, cudaMemcpyDeviceToHost);
+      mm(d_A_, d_B_, d_C_, M_, N_, K_);
+      cudaMemcpy(d_C_, C_tmp, sizeof(float) * M_ * K_, cudaMemcpyDeviceToHost);
 
-      cudaFree(&d_A);
-      cudaFree(&d_B);
-      cudaFree(&d_C);
+      oracle(d_A_, d_B_, d_C_, M_, N_, K_);
+      cudaMemcpy(d_C_, C_, sizeof(float) * M_ * K_, cudaMemcpyDeviceToHost);
 
-      long long walltime_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-      double realized_flops = (static_cast<double>(M_) * N_ * K_ * 2.0) / static_cast<double>(walltime_ns);
+      for (int i = 0; i < M_ * N_; i++) {
+        if (abs(C_tmp[i] - C_[i]) > kEpsilon) {
+          std::cout << "[" << name << "]: Failed." << std::endl;
+          delete C_tmp;
+          return;
+        }
+      }
 
-      std::cout << "[" << name_ << " -- " << kernel_name << "]: GFLOPs: " << realized_flops << ", Runtime (ns): " << walltime_ns << std::endl;
+      std::cout << "[" << name << "]: Passed." << std::endl;
+      delete C_tmp;
     }
 
     ~Benchmark() {
-      delete A_;
-      delete B_;
-      delete C_;
+        delete A_;
+        delete B_;
+        delete C_;
+
+        cudaFree(d_A_);
+        cudaFree(d_B_);
+        cudaFree(d_C_);
     }
 
   private:
     float* A_;
     float* B_;
     float* C_;
+
+    float* d_A_;
+    float* d_B_;
+    float* d_C_;
+
     int M_;
     int N_;
     int K_;
@@ -71,10 +97,11 @@ class Benchmark {
     std::string name_;
 };
 
-
 int main () {
     Benchmark f32_4096("4096, 4096, 4096", 4096, 4096, 4096);
 
     f32_4096.benchmarkDevice("Naive", &naive_gemm_32);
     f32_4096.benchmarkDevice("Tiled", &tiled_gemm_32);
+
+    f32_4096.compareOracle("Tiled", &tiled_gemm_32, &naive_gemm_32);
 }
