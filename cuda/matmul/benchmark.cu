@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "naive/naive_gemm.hpp"
+#include "tiled/tiled_gemm.hpp"
 
 constexpr float kEpsilon = 0.0001f;
 
@@ -75,4 +76,5 @@ int main () {
     Benchmark f32_4096("4096, 4096, 4096", 4096, 4096, 4096);
 
     f32_4096.benchmarkDevice("Naive", &naive_gemm_32);
+    f32_4096.benchmarkDevice("Tiled", &tiled_gemm_32);
 }

@@ -1,8 +1,8 @@
 # Matmul
 
-Matrix multiplication 
+Fast matrix multiplication on RTX 5070 (sm120).
 
-I chose not to use a benchmarking library as it improvements should be 
+I chose not to use a benchmarking library as improvements should be large.
 
 ## To-do Optimizations
 
