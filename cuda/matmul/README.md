@@ -6,7 +6,7 @@ I chose not to use a benchmarking library as improvements should be large.
 
 ## To-do Optimizations
 
-- [ ] Tiled Matrix Multiplication
+- [x] Tiled Matrix Multiplication
 - [ ] Register Tiling
 - [ ] cp.async
 - [ ] Parameter Sweeping
