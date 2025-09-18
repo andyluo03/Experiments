@@ -3,8 +3,8 @@
 #include <random>
 #include <functional>
 
-#include "naive/naive_gemm.hpp"
-#include "tiled/tiled_gemm.hpp"
+#include "naive/naive_mm.hpp"
+#include "tiled/tiled_mm.hpp"
 
 constexpr float kEpsilon = 0.0001f;
 
@@ -100,8 +100,8 @@ class Benchmark {
 int main () {
     Benchmark f32_4096("4096, 4096, 4096", 4096, 4096, 4096);
 
-    f32_4096.benchmarkDevice("Naive", &naive_gemm_32);
-    f32_4096.benchmarkDevice("Tiled", &tiled_gemm_32);
+    f32_4096.benchmarkDevice("Naive", &naive_mm_32);
+    f32_4096.benchmarkDevice("Tiled", &tiled_mm_32);
 
-    f32_4096.compareOracle("Tiled", &tiled_gemm_32, &naive_gemm_32);
+    f32_4096.compareOracle("Tiled", &tiled_mm_32, &naive_mm_32);
 }

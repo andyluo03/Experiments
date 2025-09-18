@@ -1,4 +1,4 @@
-#include "naive_gemm.hpp"
+#include "naive_mm.hpp"
 
 namespace {
 __global__
@@ -18,12 +18,12 @@ void naive_matrix_multiplication (
             result += A[outRow * N + i] * B[i * K + outCol];
         }
 
-        C[outRow * K + outCol] = result;
+        C[outRow * K + outCol] += result;
     }
 }
 }
 
-void naive_gemm_32 (
+void naive_mm_32 (
     float* A,
     float* B,
     float* C,

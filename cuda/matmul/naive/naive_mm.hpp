@@ -1,6 +1,6 @@
 #pragma once
 
-void naive_gemm_32 (
+void naive_mm_32 (
     float* A,
     float* B,
     float* C,

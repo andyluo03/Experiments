@@ -1,4 +1,4 @@
-#include "tiled_gemm.hpp"
+#include "tiled_mm.hpp"
 
 constexpr int kTileSize = 32;
 
@@ -51,12 +51,12 @@ void tiled_matrix_multiplication (
             __syncthreads();
         }
 
-        C[outRow * K + outCol] = result;
+        C[outRow * K + outCol] += result;
     }
 }
 }
 
-void tiled_gemm_32 (
+void tiled_mm_32 (
     float* A,
     float* B,
     float* C,

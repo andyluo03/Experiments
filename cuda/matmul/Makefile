@@ -1,6 +1,6 @@
 NVCC := nvcc
 
-SRCS := benchmark.cu naive/naive_gemm.cu tiled/tiled_gemm.cu
+SRCS := benchmark.cu naive/naive_mm.cu tiled/tiled_mm.cu
 OUT := bench.out
 
 all:

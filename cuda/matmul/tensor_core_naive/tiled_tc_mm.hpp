@@ -1,6 +1,6 @@
 #pragma once
 
-void tiled_gemm_32 (
+void tiled_tc_mm_32 (
     float* A,
     float* B,
     float* C,
